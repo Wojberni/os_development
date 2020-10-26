@@ -1,4 +1,4 @@
-<center><b>wojOS</b></center>
+<b>wojOS</b>
 
 <b>Hi, I'm  currently developing a new OS for learning purposes. OS name is wojOS.</b>
 
