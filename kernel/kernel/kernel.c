@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include <kernel/tty.h>
+#include "tty.h"
 
 void kernel_main(void) {
 	terminal_initialize();

@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <kernel/tty.h>
+#include "tty.h"
 
 #include "vga.h"
 
@@ -54,5 +54,5 @@ void terminal_write(const char* data, size_t size) {
 }
 
 void terminal_writestring(const char* data) {
-	terminal_write(data, strlen(data));
+	terminal_write(data, sizeof(data));
 }

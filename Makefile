@@ -3,39 +3,41 @@ ASM = nasm
 CFLAGS = -O2 -ffreestanding -Wall -Wextra -std=gnu99
 ASMFLAGS = -felf32
 OSNAME = wojos
-ISODIR ?= ./isodir
-SRC ?= ./kernel ./libc
 LINKER = kernel/arch/linker.ld
-HEADER_LIB = $(ISODIR)/usr/lib
-HEADER_INC = $(ISODIR)/usr/include
+SRC = ./kernel ./libc
+ISODIR = isodir
+CFLAGS += -Ikernel/include
+CFLAGS += -Ikernel/arch
+CFLAGS += -Ilibc/include
 
-SOURCES := $(shell find $(SRC) -name *.c -or -name *.asm) 
-OBJECTS := $(SOURCES:%=$(ISODIR)/%.o)
-DEPS := $(OBJS:.o=.d)
+C_SRC = $(shell find $(SRC) -name *.c)
+H_SRC = $(shell find $(SRC) -name *.h)
+ASM_SRC = $(shell find $(SRC) -name *.asm)
+
+C_OBJECTS = $(C_SRC:.c=.o)
+ASM_OBJECTS = $(ASM_SRC:.asm=.o)
+OBJECTS = $(C_OBJECTS) $(ASM_OBJECTS)
 
 structure: 
-	mkdir -p $(HEADER_LIB) $(HEADER_INC) ./$(ISODIR)/boot/grub
+	mkdir -p ./$(ISODIR)/boot/grub
 	./add_menuentry.sh
-	cp -R --preserve=timestamps kernel/include/. $(HEADER_INC)
-	cp -R --preserve=timestamps libc/include/. $(HEADER_LIB)
 
-all: $(ISODIR)/$(OSNAME).iso
+all: $(OSNAME).iso
 
-$(ISODIR)/$(OSNAME).iso: $(ISODIR)/$(OSNAME).bin
-	cp $^ ./$(ISODIR)/boot/$(OSNAME).bin
+$(OSNAME).iso: $(ISODIR)/boot/$(OSNAME).bin
 	grub-mkrescue -o $@ $(ISODIR)
 
-$(ISODIR)/$(OSNAME).bin: $(OBJECTS) $(LINKER)
-	$(CC) $(CFLAGS) -T $(LINKER) $< -o $@ -lgcc -nostdlib
+$(ISODIR)/boot/$(OSNAME).bin: $(OBJECTS)
+	$(CC) $(CFLAGS) -T $(LINKER) $^ -o $@ -lgcc -nostdlib
 
-$(ISODIR)/%.asm.o: %.asm
-	mkdir -p $(BUILD)
+%.o: %.asm
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-%.c.o: %.c
-	mkdir -p $(BUILD)
+%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-
 clean:
-	rm -rf $(ISODIR)
+	rm -rf $(OBJECTS) $(ISODIR) $(OSNAME).iso
+
+run:
+	bochs -f bochs.txt
